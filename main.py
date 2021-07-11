@@ -19,8 +19,8 @@ with open('posts.txt', 'r') as fp:
 	posts = json.load(fp)
 
 mastodon = Mastodon(
-    access_token = 'catboy_bot_usercred.secret',
-    api_base_url = 'https://botsin.space'
+    access_token = 'usercred.secret',
+    api_base_url = config['m_base_url']
 )
 bot_id = mastodon.me()['id']
 
