@@ -1,0 +1,5 @@
+denylist.txt
+posts.txt
+config.json
+*.secret
+__pycache__
