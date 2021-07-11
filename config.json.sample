@@ -1,0 +1,12 @@
+{
+	"g_base_url": "https://gelbooru.com",
+	"g_use_api_key": false,
+	"g_api_key": "insert-api-key",
+	"guser_id": "gelbooru-user-id",
+	"q_tags": ["tags", "to", "search", "for"],
+	"q_exclude": ["tags", "to", "exclude"],
+	"m_base_url": "https://botsin.space",
+	"m_post_interval": 1800,
+	"m_notification_fetch_interval": 10,
+	"m_operator_id": <REPLACEME id of the operator account on the bot's instance>
+}
