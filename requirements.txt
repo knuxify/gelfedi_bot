@@ -1,3 +1,4 @@
 pygelbooru
 Mastodon.py
 urllib
+pillow

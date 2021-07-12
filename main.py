@@ -7,16 +7,20 @@ import os
 
 from pygelbooru import Gelbooru
 from mastodon import Mastodon
+from PIL import Image
 import urllib
 
 with open('config.json', 'r') as fp:
 	config = json.load(fp)
+	fp.close()
 
 with open('denylist.txt', 'r') as fp:
 	denylist = json.load(fp)
+	fp.close()
 
 with open('posts.txt', 'r') as fp:
 	posts = json.load(fp)
+	fp.close()
 
 mastodon = Mastodon(
     access_token = 'usercred.secret',
@@ -41,8 +45,9 @@ def log(content):
 	print('\033[0;33m' + str(datetime.now()) + "\033[00m " + str(content))
 
 logtag_post = '\033[0;34m[post]\033[00m '
-logtag_action = '\033[0;31m[action]\033[00m '
+logtag_action = '\033[0;32m[action]\033[00m '
 logtag_info = '\033[0;36m[info]\033[00m '
+logtag_error = '\033[0;31m{ERROR}\033[00m '
 
 async def post():
 	running = True
@@ -67,17 +72,41 @@ async def post():
 		else:
 			source = 'unknown'
 
-		media = mastodon.media_post(path)
+		im = Image.open(path)
+		im_w, im_h = im.size
+
+		if im_w > 4096 or im_h > 4096 or os.path.getsize(path) > 8000000:
+			log(logtag_post + "Image larger than max supported, resizing...")
+			while im_w > 4096 or im_h > 4096:
+				im_w = round(im_w / 2)
+				im_h = round(im_h / 2)
+				im = im.resize((im_w, im_h))
+			os.remove(path)
+			im.save(path, quality=100)
+
+		im.close()
+
+		try:
+			media = mastodon.media_post(path)
+		except:
+			log(logtag_post + logtag_error + "Failed to upload media. Unsupported file? Retrying post.")
+			continue
 
 		status_content = g_base_url + "/index.php?page=post&s=view&id=" + post_id_str + '\nsource: ' + source
 
-		status = mastodon.status_post(status_content, media_ids=media['id'], sensitive=True, visibility='unlisted')
+		try:
+			status = mastodon.status_post(status_content, media_ids=media['id'], sensitive=True, visibility='unlisted')
+		except:
+			log(logtag_post + logtag_error + "Failed to make post. Are we being ratelimited? Is the server down? Trying again in 1 minute.")
+			sleep(60)
+			continue
 
 		os.remove(path)
 
 		posts[status['id']] = post_id_str
 		with open('posts.txt', 'w') as fp:
 			json.dump(posts, fp)
+			fp.close()
 
 		log(logtag_post + "Finished posting: " + status['url'])
 
@@ -99,6 +128,7 @@ async def notifcheck():
 					mastodon.status_delete(target_status_id)
 					with open('denylist.txt', 'w') as fp:
 						json.dump(denylist, fp)
+						fp.close()
 			if "post now" in status['content']:
 				log(logtag_action + "Force-posting")
 				await post()
