@@ -55,6 +55,7 @@ visibility = config['m_visibility']
 
 tags = config['q_tags']
 exclude = config['q_exclude']
+cw_tags = config['q_cw']
 
 if not visibility in ['public', 'unlisted', 'private']:
 	raise ValueError("visibility must be public, unlisted or private")
@@ -101,6 +102,16 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 
 		im.close()
 
+		cw = None
+		for tag in cw_tags:
+			if tag in g_post.tags:
+				if tag == "looking_at_viewer":
+					tag = "drawn eye contact / ec"
+				if not cw:
+					cw = "CW: " + tag
+				else:
+					cw = cw + ", " + tag
+
 		try:
 			media = mastodon.media_post(path, focus=(0, 1))
 		except Exception as e:
@@ -114,7 +125,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 			status_content = "@" + reply_to_account + " " + status_content
 
 		try:
-			status = mastodon.status_post(status_content, media_ids=media['id'], sensitive=True, visibility=visibility, in_reply_to_id=reply_to_id)
+			status = mastodon.status_post(status_content, media_ids=media['id'], sensitive=True, visibility=visibility, in_reply_to_id=reply_to_id, spoiler_text=cw)
 		except Exception as e:
 			log(logtag_post + logtag_error + "Failed to make post. Are we being ratelimited? Is the server down? Trying again in 1 minute.")
 			log(logtag_info + "Exception:\n" + str(e))
@@ -188,6 +199,22 @@ async def notifcheck():
 							fp.close()
 					else:
 						log(logtag_action + "Got request to add excludes, but no new excludes were added.")
+				if "cw tag" in status['content']:
+					new_cw = []
+					for tag in re.sub(regexp_remove_html_tags, '', status['content']).split():
+						if "@" in tag or tag == "cw" or tag == "tag":
+							continue
+						if (not tag in cw_tags) and (not tag in new_cw):
+							new_cw.append(tag)
+					if new_cw:
+						log(logtag_action + "Adding new CW tags: " + str(new_cw))
+						cw_tags = cw_tags + new_cw
+						config['q_cw'] = cw_tags
+						with open('config.json', 'w') as fp:
+							json.dump(config, fp)
+							fp.close()
+					else:
+						log(logtag_action + "Got request to add tags to CW, but no new CW tags were added.")
 			if "message me" in status['content']:
 				log(logtag_action + "Got message request from @" + status['account']['acct'])
 				await post(visibility='direct', reply_to_id=status['id'], reply_to_account=status['account']['acct'])

@@ -5,6 +5,7 @@
 	"guser_id": "gelbooru-user-id",
 	"q_tags": ["tags", "to", "search", "for"],
 	"q_exclude": ["tags", "to", "exclude"],
+	"q_cw": ["tags", "to", "put", "a", "cw", "on", "e.g. looking_at_viewer"]
 	"m_base_url": "https://botsin.space",
 	"m_post_interval": 1800,
 	"m_notification_fetch_interval": 10,
