@@ -204,6 +204,6 @@ async def invoke_forever(period, corofn, **args):
 if __name__ == '__main__':
 	log(logtag_info + "gelfedi_bot starting up")
 	botloop = asyncio.get_event_loop()
-#	botloop.create_task(invoke_forever(post_interval, post))
+	botloop.create_task(invoke_forever(post_interval, post))
 	botloop.create_task(invoke_forever(notification_fetch_interval, notifcheck))
 	botloop.run_forever()
