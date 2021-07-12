@@ -102,7 +102,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 		im.close()
 
 		try:
-			media = mastodon.media_post(path)
+			media = mastodon.media_post(path, focus=(0, 1))
 		except Exception as e:
 			log(logtag_post + logtag_error + "Failed to upload media. Unsupported file? Retrying post.")
 			log(logtag_info + "Exception:\n" + str(e))
@@ -135,7 +135,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 async def notifcheck():
 	global exclude
 	global denylist
-	notifs = mastodon.notifications(account_id=config['m_operator_id'])
+	notifs = mastodon.notifications()
 	for n in notifs:
 		if n and n['type'] == 'mention':
 			status = n['status']
@@ -204,6 +204,6 @@ async def invoke_forever(period, corofn, **args):
 if __name__ == '__main__':
 	log(logtag_info + "gelfedi_bot starting up")
 	botloop = asyncio.get_event_loop()
-	botloop.create_task(invoke_forever(post_interval, post))
+#	botloop.create_task(invoke_forever(post_interval, post))
 	botloop.create_task(invoke_forever(notification_fetch_interval, notifcheck))
 	botloop.run_forever()
