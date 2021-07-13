@@ -63,6 +63,18 @@ if not visibility in ['public', 'unlisted', 'private']:
 if visibility == 'public':
 	log(logtag_info + "WARNING: You have set your visibility to public. This is generally NOT RECOMMENDED and oftentimes frowned upon, and on some instances bots posting on public may be a bannable offense. Use unlisted instead, unless you know what you're doing!")
 
+def reply_noexcept(to_status, status, visibility='unlisted'):
+	try:
+		mastodon.status_reply(to_status=to_status, status=status, visibility=visibility)
+	except:
+		pass
+
+def favourite_noexcept(id):
+	try:
+		mastodon.status_favourite(id)
+	except:
+		pass
+
 async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 	if (reply_to_id and not reply_to_account) or (reply_to_account and not reply_to_id):
 		raise ValueError("Make sure both reply_to_id and reply_to_account are set.")
@@ -164,10 +176,13 @@ async def notifcheck():
 						with open('denylist.txt', 'w') as fp:
 							json.dump(denylist, fp)
 							fp.close()
+						favourite_noexcept(status['id'])
 				if "post now" in status['content']:
 					log(logtag_action + "Force-posting")
 					await post()
+					favourite_noexcept(status['id'])
 				if "deny id" in status['content']:
+					favourite_noexcept(status['id'])
 					new_denies = []
 					for id in re.sub(regexp_remove_html_tags, '', status['content']).split():
 						try:
@@ -182,9 +197,12 @@ async def notifcheck():
 						with open('denylist.txt', 'w') as fp:
 							json.dump(denylist, fp)
 							fp.close()
+						reply_noexcept(status, 'Added IDs to denylist: ' + str(new_denies), visibility='direct')
 					else:
 						log(logtag_action + "Got request to add IDs to denylist, but no new denies were added.")
+						reply_noexcept(status, 'No new denies added', visibility='direct')
 				if "exclude tag" in status['content']:
+					favourite_noexcept(status['id'])
 					new_excludes = []
 					for tag in re.sub(regexp_remove_html_tags, '', status['content']).split():
 						if "@" in tag or tag == "exclude" or tag == "tag":
@@ -198,9 +216,12 @@ async def notifcheck():
 						with open('config.json', 'w') as fp:
 							json.dump(config, fp)
 							fp.close()
+						reply_noexcept(status, 'Added new excludes: ' + str(new_excludes), visibility='direct')
 					else:
 						log(logtag_action + "Got request to add excludes, but no new excludes were added.")
+						reply_noexcept(status, 'No new excludes added', visibility='direct')
 				if "cw tag" in status['content']:
+					favourite_noexcept(status['id'])
 					new_cw = []
 					for tag in re.sub(regexp_remove_html_tags, '', status['content']).split():
 						if "@" in tag or tag == "cw" or tag == "tag":
@@ -214,18 +235,21 @@ async def notifcheck():
 						with open('config.json', 'w') as fp:
 							json.dump(config, fp)
 							fp.close()
+						reply_noexcept(status, 'Added new CW tags: ' + str(new_cw), visibility='direct')
 					else:
 						log(logtag_action + "Got request to add tags to CW, but no new CW tags were added.")
+						reply_noexcept(status, 'No new CW tags added', visibility='direct')
 			if "message me" in status['content']:
 				log(logtag_action + "Got message request from @" + status['account']['acct'])
+				favourite_noexcept(status['id'])
 				await post(visibility='direct', reply_to_id=status['id'], reply_to_account=status['account']['acct'])
 			log(logtag_action + "Done, clearing notifications")
 			mastodon.notifications_clear()
 
-async def invoke_forever(period, corofn, **args):
+async def invoke_forever(period, corofn):
     while True:
         then = time()
-        await corofn(**args)
+        await corofn()
         elapsed = time() - then
         await asyncio.sleep(period - elapsed)
 
