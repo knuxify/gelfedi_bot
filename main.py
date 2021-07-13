@@ -146,6 +146,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 async def notifcheck():
 	global exclude
 	global denylist
+	global cw_tags
 	notifs = mastodon.notifications()
 	for n in notifs:
 		if n and n['type'] == 'mention':
