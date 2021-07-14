@@ -83,6 +83,11 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 		log(logtag_post + "Getting random image...")
 		g_post = await gelbooru.random_post(tags=tags, exclude_tags=exclude)
 
+		if not g_post:
+			log(logtag_post + "...got nothing, are we being ratelimited? Trying again in 1 minute.")
+			sleep(60)
+			continue
+
 		if str(g_post.id) in denylist:
 			log(logtag_post + "...got post on denylist, let's try again.")
 			continue
