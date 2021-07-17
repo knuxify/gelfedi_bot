@@ -130,7 +130,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 					cw = cw + ", " + tag
 
 		try:
-			media = mastodon.media_post(path, focus=(0, 1))
+			media = mastodon.media_post(path, focus=(0, 0.75))
 		except Exception as e:
 			log(logtag_post + logtag_error + "Failed to upload media. Unsupported file? Retrying post.")
 			log(logtag_info + "Exception:\n" + str(e))
@@ -151,7 +151,7 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 
 		os.remove(path)
 
-		posts[status['id']] = post_id_str
+		posts[str(status['id'])] = post_id_str
 		with open('posts.txt', 'w') as fp:
 			json.dump(posts, fp)
 			fp.close()
