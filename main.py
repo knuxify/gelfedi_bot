@@ -164,7 +164,17 @@ async def notifcheck():
 	global exclude
 	global denylist
 	global cw_tags
-	notifs = mastodon.notifications()
+
+	running = True
+	while running:
+		try:
+			notifs = mastodon.notifications()
+		except:
+			log(logtag_action + logtag_error + "Failed to fetch notifications. Server errors? Trying again in 1 minute."
+			sleep(60)
+			continue
+		running = False
+
 	for n in notifs:
 		if n and n['type'] == 'mention':
 			status = n['status']
@@ -249,7 +259,16 @@ async def notifcheck():
 				favourite_noexcept(status['id'])
 				await post(visibility='direct', reply_to_id=status['id'], reply_to_account=status['account']['acct'])
 			log(logtag_action + "Done, clearing notifications")
-			mastodon.notifications_clear()
+
+			running = True
+			while running:
+				try:
+					mastodon.notifications_clear()
+				except:
+					log(logtag_action + logtag_error + "Failed to clear notifications. Server errors? Trying again in 1 minute."
+					sleep(60)
+					continue
+				running = False
 
 async def invoke_forever(period, corofn):
     while True:
