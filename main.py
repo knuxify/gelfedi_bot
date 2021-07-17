@@ -170,7 +170,7 @@ async def notifcheck():
 		try:
 			notifs = mastodon.notifications()
 		except:
-			log(logtag_action + logtag_error + "Failed to fetch notifications. Server errors? Trying again in 1 minute."
+			log(logtag_action + logtag_error + "Failed to fetch notifications. Server errors? Trying again in 1 minute.")
 			sleep(60)
 			continue
 		running = False
@@ -265,7 +265,7 @@ async def notifcheck():
 				try:
 					mastodon.notifications_clear()
 				except:
-					log(logtag_action + logtag_error + "Failed to clear notifications. Server errors? Trying again in 1 minute."
+					log(logtag_action + logtag_error + "Failed to clear notifications. Server errors? Trying again in 1 minute.")
 					sleep(60)
 					continue
 				running = False
