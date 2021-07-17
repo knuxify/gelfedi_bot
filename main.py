@@ -184,7 +184,7 @@ async def notifcheck():
 					if "delete this" in status['content'] and status['in_reply_to_account_id'] == bot_id:
 						log(logtag_action + "Deleting post: " + status['url'])
 						try:
-							denylist.append(posts[target_status_id])
+							denylist.append(posts[str(target_status_id)])
 						except KeyError:
 							log(logtag_action + "WARNING: Couldn't find ID of post in posts dict, cannot add to denylist!")
 						mastodon.status_delete(target_status_id)
