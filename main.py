@@ -81,7 +81,12 @@ async def post(visibility=visibility, reply_to_id=None, reply_to_account=None):
 	running = True
 	while running:
 		log(logtag_post + "Getting random image...")
-		g_post = await gelbooru.random_post(tags=tags, exclude_tags=exclude)
+		try:
+			g_post = await gelbooru.random_post(tags=tags, exclude_tags=exclude)
+		except:
+			log(logtag_post + "getting random post failed, are we being ratelimited? Trying again in 1 minute.")
+			sleep(60)
+			continue
 
 		if not g_post:
 			log(logtag_post + "...got nothing, are we being ratelimited? Trying again in 1 minute.")
@@ -175,8 +180,11 @@ async def notifcheck():
 			continue
 		running = False
 
+	notifs_found = False
+
 	for n in notifs:
 		if n and n['type'] == 'mention':
+			notifs_found = True
 			status = n['status']
 			if n['account']['id'] == config['m_operator_id']:
 				if "in_reply_to_id" in status and status['in_reply_to_id']:
@@ -258,17 +266,18 @@ async def notifcheck():
 				log(logtag_action + "Got message request from @" + status['account']['acct'])
 				favourite_noexcept(status['id'])
 				await post(visibility='direct', reply_to_id=status['id'], reply_to_account=status['account']['acct'])
-			log(logtag_action + "Done, clearing notifications")
 
-			running = True
-			while running:
-				try:
-					mastodon.notifications_clear()
-				except:
-					log(logtag_action + logtag_error + "Failed to clear notifications. Server errors? Trying again in 1 minute.")
-					sleep(60)
-					continue
-				running = False
+	if notifs_found:
+		running = True
+		while running:
+			try:
+				mastodon.notifications_clear()
+				log(logtag_action + "Done, cleared notifications")
+			except:
+				log(logtag_action + logtag_error + "Failed to clear notifications. Server errors? Trying again in 1 minute.")
+				sleep(60)
+				continue
+			running = False
 
 async def invoke_forever(period, corofn):
     while True:
