@@ -16,7 +16,3 @@ Mastodon.py bot that posts images from gelbooru using pygelbooru
 3. Run ``main.py`` from the bot's directory
 
 ``main.py`` loops forever, so there's no need to wrap it in a separate file.
-
-## Custom gelbooru instance
-
-pygelbooru does not appear to support changing the base URL of the gelbooru instance it pulls from (by default it's gelbooru.com). You'll have to modify it manually (hint: check where the module's installed (usually somewhere in ~/.local) and find the gelbooru.py file there).
